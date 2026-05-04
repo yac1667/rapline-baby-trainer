@@ -1,0 +1,46 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# claude code local
+.claude/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# user audio (do not commit copyrighted content)
+/public/audio
+*.mp3
+*.m4a
+*.wav
+*.flac
