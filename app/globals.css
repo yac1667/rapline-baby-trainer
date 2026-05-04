@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(61, 169, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(192, 132, 252, 0.12), transparent 60%),
+    linear-gradient(180deg, #07070f 0%, #0a0a16 100%);
+  color: #e7e7f5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font: inherit;
+}
+
+.token {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.18em;
+  transition: color 180ms ease, opacity 180ms ease, transform 180ms ease;
+}
+
+.token::after {
+  content: "";
+  position: absolute;
+  left: 0.18em;
+  right: 0.18em;
+  bottom: -0.18em;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #3da9ff, #c084fc);
+  transform-origin: left;
+  transform: scaleX(var(--token-progress, 0));
+  opacity: 0;
+  transition: opacity 200ms ease, transform 90ms linear;
+}
+
+.token[data-active="true"]::after {
+  opacity: 0.95;
+}
+
+.token[data-state="past"] {
+  opacity: 0.45;
+}
+
+.token[data-state="future"] {
+  opacity: 0.85;
+}
+
+.token[data-weak="true"] {
+  font-size: 0.86em;
+  color: #9ea0c0;
+  letter-spacing: 0.01em;
+}
+
+.token[data-stress="true"] {
+  font-weight: 700;
+  letter-spacing: 0.005em;
+}
+
+.token[data-active="true"] {
+  color: #ffffff;
+}
+
+.token[data-active="true"][data-stress="true"] {
+  text-shadow: 0 0 22px rgba(255, 210, 63, 0.55);
+}
+
+.elision-slash {
+  position: absolute;
+  inset: auto 0 0 0;
+  pointer-events: none;
+}
+
+.beat-grid {
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 64px 100%;
+}
+
+.scroll-shadow-fade {
+  mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%);
+}
+
+.btn-pill {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-ink-100/90 backdrop-blur transition hover:bg-white/10 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+.btn-pill[data-active="true"] {
+  @apply bg-white text-ink-950 border-white;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-ink-300;
+}
