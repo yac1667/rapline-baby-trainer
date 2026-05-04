@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 interface Props {
   hasAudio: boolean;
-  onPick: (url: string, name: string) => void;
+  onPick: (url: string, name: string, file: File) => void;
   onClear: () => void;
 }
 
@@ -24,7 +24,7 @@ export function AudioImport({ hasAudio, onPick, onClear }: Props) {
           if (!file) return;
           const url = URL.createObjectURL(file);
           setName(file.name);
-          onPick(url, file.name);
+          onPick(url, file.name, file);
         }}
       />
       <button

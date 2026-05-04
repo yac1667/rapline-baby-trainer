@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { sampleTrack } from "@/data/sample-track";
+import { emptyTrack } from "@/data/sample-track";
 import { useAudioEngine } from "@/lib/useAudioEngine";
 import { findActiveLineIndex, findActiveTokenIndex } from "@/lib/sync";
 import { LyricStage } from "@/components/LyricStage";
@@ -9,15 +9,18 @@ import { PlayerControls } from "@/components/PlayerControls";
 import { HintCard } from "@/components/HintCard";
 import { AudioImport } from "@/components/AudioImport";
 import { MarkLegend } from "@/components/MarkLegend";
+import { buildTrackFromLrc, extractM4aLyrics } from "@/lib/lrc";
 import type { LineSpec, MarkSpec, TokenSpec, ViewDensity } from "@/lib/types";
 
 export default function HomePage() {
   const audio = useAudioEngine();
-  const track = sampleTrack;
+  const [track, setTrack] = useState(emptyTrack);
   const [density, setDensity] = useState<ViewDensity>("learn");
   const [hintMark, setHintMark] = useState<MarkSpec | null>(null);
   const [smoothTime, setSmoothTime] = useState(0);
   const [hasAudio, setHasAudio] = useState(false);
+  const [lyricStatus, setLyricStatus] = useState<"idle" | "embedded" | "missing">("idle");
+  const autoSeekedRef = useRef(false);
   const rafRef = useRef<number>();
 
   // High-frequency time read via rAF for smooth highlighting (timeupdate is too sparse)
@@ -32,6 +35,12 @@ export default function HomePage() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [audio.audioRef]);
+
+  useEffect(() => {
+    if (!hasAudio || !audio.ready || autoSeekedRef.current) return;
+    autoSeekedRef.current = true;
+    audio.seek(track.segmentStart);
+  }, [audio, hasAudio, track.segmentStart]);
 
   const lines = track.lines;
   const activeLineIndex = useMemo(() => findActiveLineIndex(lines, smoothTime), [lines, smoothTime]);
@@ -94,16 +103,33 @@ export default function HomePage() {
   }, [audio, hintMark, activeLine]);
 
   const onPickAudio = useCallback(
-    (url: string) => {
+    async (url: string, name: string, file: File) => {
+      autoSeekedRef.current = false;
       audio.setSrc(url);
       setHasAudio(true);
+      setLyricStatus("missing");
+      try {
+        const lyrics = extractM4aLyrics(await file.arrayBuffer());
+        const embeddedTrack = lyrics ? buildTrackFromLrc(lyrics, name) : null;
+        if (embeddedTrack) {
+          setTrack(embeddedTrack);
+          setLyricStatus("embedded");
+          return;
+        }
+      } catch {
+        // Metadata parsing can fail on malformed files; show an explicit missing-lyrics state.
+      }
+      setTrack(emptyTrack);
     },
     [audio],
   );
 
   const onClearAudio = useCallback(() => {
+    autoSeekedRef.current = false;
     audio.setSrc(null);
     setHasAudio(false);
+    setTrack(emptyTrack);
+    setLyricStatus("idle");
   }, [audio]);
 
   return (
@@ -136,7 +162,17 @@ export default function HomePage() {
 
         {!hasAudio && (
           <div className="mt-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-4 py-2 text-xs text-amber-100/80">
-            尚未导入音频。点击右上“导入本地音频”加载你已合法获得的音频文件，演示标注会按照内置时间轴运行。版权保护内容请勿放入公开仓库。
+            尚未导入音频。点击右上"导入本地音频"加载已内嵌 LRC 的音频文件，页面会按 LRC 时间轴自动跟随。
+          </div>
+        )}
+        {hasAudio && lyricStatus === "embedded" && (
+          <div className="mt-1 rounded-xl border border-emerald-300/20 bg-emerald-300/5 px-4 py-2 text-xs text-emerald-100/80">
+            已读取音频内嵌 LRC，并使用其中的完整时间轴生成当前练习。
+          </div>
+        )}
+        {hasAudio && lyricStatus === "missing" && (
+          <div className="mt-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-4 py-2 text-xs text-amber-100/80">
+            未在音频内读到可用的时间戳歌词。请先内嵌 LRC，或导入已带 LRC 的音频文件。
           </div>
         )}
       </header>
